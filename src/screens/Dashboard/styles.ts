@@ -10,6 +10,7 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   scroll: {
+    flex: 1,
     position: 'absolute',
     gap: 8,
     paddingBottom: 64,

@@ -21,7 +21,7 @@ export function Dashboard() {
   const [isWeatherLoading, setWeatherIsLoading] = useState<boolean>(true);
   const [weather, setWeather] = useState<WeatherResponseProps>({} as WeatherResponseProps);
 
-  const { city, handleChanceCity, cityIsLoading } = useCity();
+  const { city, handleChanceCity, cityIsLoading, getUserLocation } = useCity();
 
   function handleSelect(value: CityProps) {
     handleChanceCity(value);
@@ -31,6 +31,7 @@ export function Dashboard() {
 
   async function getWeatherDetails() {
     if (!city) {
+      getUserLocation();
       return;
     }
 

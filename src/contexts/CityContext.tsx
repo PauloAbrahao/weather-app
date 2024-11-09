@@ -13,6 +13,7 @@ type CityContextDataProps = {
   cityIsLoading: boolean;
   city: CityProps | null;
   handleChanceCity: (city: CityProps) => void;
+  getUserLocation: () => void;
 };
 
 export const CityContext = createContext<CityContextDataProps>(
@@ -32,6 +33,53 @@ export function CityProvider({children}: CityContextProviderProps) {
     setCityIsLoading(false);
   }
 
+  const getUserLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    console.log('status', status);
+    if (status !== "granted") {
+      Toast.show({
+        type: "error",
+        text1: "Permissão para acessar a localização foi negada.",
+        position: "bottom"
+      });
+      return;
+    }
+
+    try {
+      const newLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      console.log('newLocation', newLocation);
+
+      const coords = newLocation.coords;
+
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+
+      console.log('reverseGeocode', reverseGeocode);
+
+      if (reverseGeocode.length > 0) {
+        const res = await getCityByNameService(
+          reverseGeocode[0].city || ""
+        );
+        console.log('res', res.length);
+        setCity(res[0]);
+        if (res.length !== 0) await saveStorageCity(res[0]);
+      }
+    } catch (error) {
+      console.log('error', error);
+      Toast.show({
+        type: "error",
+        text1: "Erro ao obter localização.",
+        position: "bottom"
+      });
+      return;
+    }
+  }
+
   useEffect(() => {
     setCityIsLoading(true);
 
@@ -46,43 +94,7 @@ export function CityProvider({children}: CityContextProviderProps) {
       if (savedCity) {
         setCity(savedCity);
       } else {
-        let {status} = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          Toast.show({
-            type: "error",
-            text1: "Permissão para acessar a localização foi negada.",
-            position: "bottom"
-          });
-          return;
-        }
-
-        try {
-          const newLocation = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
-          });
-
-          const coords = newLocation.coords;
-
-          const reverseGeocode = await Location.reverseGeocodeAsync({
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-          });
-
-          if (reverseGeocode.length > 0) {
-            const res = await getCityByNameService(
-              reverseGeocode[0].city || ""
-            );
-            setCity(res[0]);
-            await saveStorageCity(res[0]);
-          }
-        } catch (error) {
-          Toast.show({
-            type: "error",
-            text1: "Erro ao obter localização.",
-            position: "bottom"
-          });
-          return;
-        }
+        await getUserLocation();
       }
     })();
   }, []);
@@ -93,6 +105,7 @@ export function CityProvider({children}: CityContextProviderProps) {
         city,
         cityIsLoading,
         handleChanceCity,
+        getUserLocation
       }}
     >
       {children}

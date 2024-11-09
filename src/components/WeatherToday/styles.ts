@@ -3,7 +3,6 @@ import { theme } from '@styles/theme';
 
 export const styles = StyleSheet.create({
   containerImage: {
-    flex: 1,
     height: 400,
     borderRadius: 8
   },
