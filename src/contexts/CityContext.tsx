@@ -35,7 +35,6 @@ export function CityProvider({children}: CityContextProviderProps) {
 
   const getUserLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
-    console.log('status', status);
     if (status !== "granted") {
       Toast.show({
         type: "error",
@@ -50,8 +49,6 @@ export function CityProvider({children}: CityContextProviderProps) {
         accuracy: Location.Accuracy.High,
       });
 
-      console.log('newLocation', newLocation);
-
       const coords = newLocation.coords;
 
       const reverseGeocode = await Location.reverseGeocodeAsync({
@@ -59,18 +56,14 @@ export function CityProvider({children}: CityContextProviderProps) {
         longitude: coords.longitude,
       });
 
-      console.log('reverseGeocode', reverseGeocode);
-
       if (reverseGeocode.length > 0) {
         const res = await getCityByNameService(
           reverseGeocode[0].city || ""
         );
-        console.log('res', res.length);
         setCity(res[0]);
         if (res.length !== 0) await saveStorageCity(res[0]);
       }
     } catch (error) {
-      console.log('error', error);
       Toast.show({
         type: "error",
         text1: "Erro ao obter localização.",
